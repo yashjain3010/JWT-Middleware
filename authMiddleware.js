@@ -1,9 +1,11 @@
 const jwt = require('jsonwebtoken');
+const {hasPermission} = require('./rolePermissions');
 
 const SUPERADMIN_ADMIN_SECRET = "helloworld"
 const BACKEND_SYSTEM_SECRET = "jwtsecret123"
 
-function authenticationToken(req,res,next){
+function authenticationToken(requiredPermission){
+    return (req,res,next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -35,9 +37,9 @@ function authenticationToken(req,res,next){
 
             //If role is not matched
 
-            if(role !== 'superadmin' && role !== 'admin'){
+            if(!hasPermission(role,requiredPermission)){
                 return res.status(403).json({
-                    msg : "Unauthorized access"
+                    msg: "Access denied: Insufficient permission"
                 })
             }
 
@@ -52,9 +54,9 @@ function authenticationToken(req,res,next){
                 msg: "Invalid Backend System token"
             })
 
-            if(role !== 'backend-system'){
+            if(!hasPermission(role,requiredPermission)){
                 return res.status(403).json({
-                    msg: "Unauthorized access"
+                   msg : "Access denied: Insufficent permission"
                 })
             }
 
@@ -68,6 +70,7 @@ function authenticationToken(req,res,next){
             msg: "Unknown token issuer"
         })
     }
+  }
 }
 
 module.exports = authenticationToken
